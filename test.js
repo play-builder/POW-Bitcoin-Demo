@@ -31,3 +31,19 @@ bitcoin.createNewBlock('parentHash123', 'hash456', 1000);
 console.log('Block 1:', bitcoin.chain[1]);
 console.log('Chain length:', bitcoin.chain.length);
 
+console.log('\n4. Proof of Work 테스트');
+console.log('-------------------');
+
+const parentHash = bitcoin.getLastBlock()['hash'];
+
+// 새로운 트랜잭션 추가
+bitcoin.createNewTransaction(300, 'DAVE_ADDRESS_ABC', 'EVE_ADDRESS_DEF');
+
+const currentBlockData = {
+  transactions: bitcoin.pendingTxs,
+  index: bitcoin.chain.length
+};
+
+console.log('Proof of Work 시작...');
+console.log('Parent Hash:', parentHash);
+console.log('Current Block Data:', currentBlockData);
