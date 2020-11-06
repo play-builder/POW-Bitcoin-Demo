@@ -20,3 +20,14 @@ class Blockchain {
    * @returns {object} 새로 생성된 블록
    */
   createNewBlock(parentHash, hash, nonce) {
+    const newBlock = {
+      index: this.chain.length,
+      timestamp: Date.now(),
+      parentHash: parentHash,
+      hash: hash,
+      nonce: nonce,
+      transactions: this.pendingTxs,
+    };
+
+    this.pendingTxs = [];
+    this.chain.push(newBlock);
