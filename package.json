@@ -1,0 +1,34 @@
+{
+  "name": "bitcoin-pow-demo",
+  "version": "1.0.0",
+  "description": "Bitcoin Proof of Work Blockchain Demo",
+  "main": "blockchain.js",
+  "scripts": {
+    "test": "node test.js",
+    "examples": "node examples.js",
+    "node_1": "nodemon --watch . networkNode.js 3001 http://localhost:3001",
+    "node_2": "nodemon --watch . networkNode.js 3002 http://localhost:3002",
+    "node_3": "nodemon --watch . networkNode.js 3003 http://localhost:3003",
+    "node_4": "nodemon --watch . networkNode.js 3004 http://localhost:3004",
+    "node_5": "nodemon --watch . networkNode.js 3005 http://localhost:3005",
+    "difficulty": "node difficulty-simulator.js",
+    "fork": "node fork-simulator.js",
+    "benchmark": "node performance-benchmark.js",
+    "visualize": "node visualize-chain.js",
+    "mining": "node mining-simulator.js"
+  },
+  "keywords": ["blockchain", "bitcoin", "proof-of-work", "cryptocurrency"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.6",
+    "sha256": "^0.2.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
