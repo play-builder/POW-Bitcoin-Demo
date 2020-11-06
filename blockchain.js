@@ -42,3 +42,14 @@ class Blockchain {
   getLastBlock() {
     return this.chain[this.chain.length - 1];
   }
+
+  /**
+   * 새로운 트랜잭션 생성
+   * @param {number} amount - 전송할 금액
+   * @param {string} sender - 송신자 주소
+   * @param {string} recipient - 수신자 주소
+   * @returns {number} 트랜잭션이 포함될 블록의 인덱스
+   */
+  createNewTransaction(amount, sender, recipient) {
+    const newTransaction = {
+      transactionId: uuidv4().split('-').join(''),
