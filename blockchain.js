@@ -31,3 +31,14 @@ class Blockchain {
 
     this.pendingTxs = [];
     this.chain.push(newBlock);
+
+    return newBlock;
+  }
+
+  /**
+   * 마지막 블록 조회
+   * @returns {object} 체인의 마지막 블록
+   */
+  getLastBlock() {
+    return this.chain[this.chain.length - 1];
+  }
