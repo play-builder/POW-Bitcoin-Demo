@@ -76,3 +76,14 @@ class Blockchain {
    * 블록 데이터를 해싱
    * @param {string} parentHash - 이전 블록의 해시
    * @param {array} currentBlockData - 현재 블록의 트랜잭션 데이터
+   * @param {number} nonce - 논스 값
+   * @returns {string} SHA256 해시값
+   */
+  hashBlock(parentHash, currentBlockData, nonce) {
+    const dataAsString = parentHash + JSON.stringify(currentBlockData) + nonce.toString();
+    const hash = sha256(dataAsString);
+    return hash;
+  }
+
+  /**
+   * Proof of Work (작업 증명)
