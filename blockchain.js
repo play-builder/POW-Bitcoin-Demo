@@ -64,3 +64,15 @@ class Blockchain {
 
   /**
    * 새로운 트랜잭션을 pending 트랜잭션에 추가
+   * @param {object} transactionObj - 트랜잭션 객체
+   * @returns {number} 트랜잭션이 포함될 블록 인덱스
+   */
+  addTransactionToPendingTransactions(transactionObj) {
+    this.pendingTxs.push(transactionObj);
+    return this.getLastBlock()['index'] + 1;
+  }
+
+  /**
+   * 블록 데이터를 해싱
+   * @param {string} parentHash - 이전 블록의 해시
+   * @param {array} currentBlockData - 현재 블록의 트랜잭션 데이터
