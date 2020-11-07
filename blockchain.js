@@ -53,3 +53,14 @@ class Blockchain {
   createNewTransaction(amount, sender, recipient) {
     const newTransaction = {
       transactionId: uuidv4().split('-').join(''),
+      amount: amount,
+      sender: sender,
+      recipient: recipient,
+      timestamp: Date.now(),
+    };
+
+    return newTransaction;
+  }
+
+  /**
+   * 새로운 트랜잭션을 pending 트랜잭션에 추가
