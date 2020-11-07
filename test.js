@@ -47,3 +47,20 @@ const currentBlockData = {
 console.log('Proof of Work 시작...');
 console.log('Parent Hash:', parentHash);
 console.log('Current Block Data:', currentBlockData);
+
+const startTime = Date.now();
+const nonce = bitcoin.proofOfWork(parentHash, currentBlockData);
+const endTime = Date.now();
+
+console.log('\nProof of Work 완료!');
+console.log('Nonce:', nonce);
+console.log('소요 시간:', (endTime - startTime) + 'ms');
+
+// 찾은 nonce로 해시 생성
+const blockHash = bitcoin.hashBlock(parentHash, currentBlockData, nonce);
+console.log('Block Hash:', blockHash);
+console.log('Hash가 0000으로 시작하는가?', blockHash.substring(0, 4) === '0000');
+
+console.log('\n5. POW로 블록 생성');
+console.log('-------------------');
+
