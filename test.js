@@ -64,3 +64,19 @@ console.log('Hash가 0000으로 시작하는가?', blockHash.substring(0, 4) ===
 console.log('\n5. POW로 블록 생성');
 console.log('-------------------');
 
+bitcoin.createNewBlock(parentHash, blockHash, nonce);
+console.log('Block 2:', bitcoin.chain[2]);
+console.log('Chain length:', bitcoin.chain.length);
+
+console.log('\n6. 해시 함수 테스트');
+console.log('-------------------');
+
+const testParentHash = 'testParentHash123456';
+const testData = [
+  { amount: 100, sender: 'Alice', recipient: 'Bob' },
+  { amount: 200, sender: 'Bob', recipient: 'Charlie' }
+];
+const testNonce = 5000;
+
+const hash1 = bitcoin.hashBlock(testParentHash, testData, testNonce);
+console.log('Hash 1:', hash1);
