@@ -87,3 +87,14 @@ class Blockchain {
 
   /**
    * Proof of Work (작업 증명)
+   * 0000으로 시작하는 해시를 찾을 때까지 nonce를 증가시킴
+   * @param {string} parentHash - 이전 블록의 해시
+   * @param {array} currentBlockData - 현재 블록의 트랜잭션 데이터
+   * @returns {number} 조건을 만족하는 nonce 값
+   */
+  proofOfWork(parentHash, currentBlockData) {
+    let nonce = 0;
+    let hash = this.hashBlock(parentHash, currentBlockData, nonce);
+    
+    // 0000으로 시작하는 해시를 찾을 때까지 반복
+    while (hash.substring(0, 4) !== '0000') {
