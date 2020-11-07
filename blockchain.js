@@ -98,3 +98,14 @@ class Blockchain {
     
     // 0000으로 시작하는 해시를 찾을 때까지 반복
     while (hash.substring(0, 4) !== '0000') {
+      nonce++;
+      hash = this.hashBlock(parentHash, currentBlockData, nonce);
+    }
+
+    return nonce;
+  }
+
+  /**
+   * 체인의 유효성 검증
+   * @param {array} blockchain - 검증할 블록체인
+   * @returns {boolean} 유효성 여부
