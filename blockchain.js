@@ -131,3 +131,14 @@ class Blockchain {
       // 해시가 0000으로 시작하지 않으면 유효하지 않음
       if (blockHash.substring(0, 4) !== '0000') {
         validChain = false;
+      }
+
+      // 현재 블록의 parentHash가 이전 블록의 hash와 일치하는지 확인
+      if (currentBlock['parentHash'] !== prevBlock['hash']) {
+        validChain = false;
+      }
+    }
+
+    // Genesis 블록 검증
+    const genesisBlock = blockchain[0];
+    const correctNonce = genesisBlock['nonce'] === 0;
