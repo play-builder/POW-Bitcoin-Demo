@@ -120,3 +120,14 @@ class Blockchain {
 
       // 현재 블록의 해시 재계산하여 검증
       const blockHash = this.hashBlock(
+        prevBlock['hash'],
+        {
+          transactions: currentBlock['transactions'],
+          index: currentBlock['index']
+        },
+        currentBlock['nonce']
+      );
+
+      // 해시가 0000으로 시작하지 않으면 유효하지 않음
+      if (blockHash.substring(0, 4) !== '0000') {
+        validChain = false;
