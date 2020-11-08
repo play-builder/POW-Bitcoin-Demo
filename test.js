@@ -97,3 +97,19 @@ console.log('\n7. 체인 유효성 검증');
 console.log('-------------------');
 
 // 더 많은 블록 생성
+for (let i = 0; i < 3; i++) {
+  const lastBlock = bitcoin.getLastBlock();
+  const previousBlockHash = lastBlock['hash'];
+  
+  // 트랜잭션 추가
+  bitcoin.createNewTransaction(
+    Math.floor(Math.random() * 100),
+    `SENDER_${i}`,
+    `RECIPIENT_${i}`
+  );
+
+  const blockData = {
+    transactions: bitcoin.pendingTxs,
+    index: lastBlock['index'] + 1
+  };
+
