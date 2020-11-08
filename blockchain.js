@@ -109,3 +109,14 @@ class Blockchain {
    * 체인의 유효성 검증
    * @param {array} blockchain - 검증할 블록체인
    * @returns {boolean} 유효성 여부
+   */
+  chainIsValid(blockchain) {
+    let validChain = true;
+
+    // 각 블록 검증 (Genesis 블록 제외)
+    for (let i = 1; i < blockchain.length; i++) {
+      const currentBlock = blockchain[i];
+      const prevBlock = blockchain[i - 1];
+
+      // 현재 블록의 해시 재계산하여 검증
+      const blockHash = this.hashBlock(
