@@ -80,3 +80,20 @@ const testNonce = 5000;
 
 const hash1 = bitcoin.hashBlock(testParentHash, testData, testNonce);
 console.log('Hash 1:', hash1);
+
+// 데이터를 약간 변경
+testData[0].amount = 101;
+const hash2 = bitcoin.hashBlock(testParentHash, testData, testNonce);
+console.log('Hash 2 (amount를 1만 변경):', hash2);
+console.log('두 해시가 다른가?', hash1 !== hash2);
+
+// 원래 데이터로 복구
+testData[0].amount = 100;
+const hash3 = bitcoin.hashBlock(testParentHash, testData, testNonce);
+console.log('Hash 3 (원래 데이터):', hash3);
+console.log('Hash 1과 Hash 3이 같은가?', hash1 === hash3);
+
+console.log('\n7. 체인 유효성 검증');
+console.log('-------------------');
+
+// 더 많은 블록 생성
