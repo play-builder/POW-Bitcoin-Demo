@@ -142,3 +142,15 @@ class Blockchain {
     // Genesis 블록 검증
     const genesisBlock = blockchain[0];
     const correctNonce = genesisBlock['nonce'] === 0;
+    const correctPreviousBlockHash = genesisBlock['parentHash'] === '0';
+    const correctHash = genesisBlock['hash'] === '0';
+    const correctTransactions = genesisBlock['transactions'].length === 0;
+
+    if (!correctNonce || !correctPreviousBlockHash || !correctHash || !correctTransactions) {
+      validChain = false;
+    }
+
+    return validChain;
+  }
+
+  /**
