@@ -154,3 +154,14 @@ class Blockchain {
   }
 
   /**
+   * 특정 블록을 해시값으로 조회
+   * @param {string} blockHash - 찾을 블록의 해시값
+   * @returns {object|null} 찾은 블록 또는 null
+   */
+  getBlock(blockHash) {
+    let correctBlock = null;
+    this.chain.forEach(block => {
+      if (block.hash === blockHash) correctBlock = block;
+    });
+    return correctBlock;
+  }
