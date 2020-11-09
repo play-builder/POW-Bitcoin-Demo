@@ -198,3 +198,14 @@ class Blockchain {
   getAddressData(address) {
     const addressTransactions = [];
     
+    this.chain.forEach(block => {
+      block.transactions.forEach(transaction => {
+        if (transaction.sender === address || transaction.recipient === address) {
+          addressTransactions.push(transaction);
+        }
+      });
+    });
+
+    // 잔액 계산
+    let balance = 0;
+    addressTransactions.forEach(transaction => {
