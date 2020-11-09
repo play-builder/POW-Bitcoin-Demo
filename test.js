@@ -113,3 +113,20 @@ for (let i = 0; i < 3; i++) {
     index: lastBlock['index'] + 1
   };
 
+  const nonce = bitcoin.proofOfWork(previousBlockHash, blockData);
+  const hash = bitcoin.hashBlock(previousBlockHash, blockData, nonce);
+  
+  bitcoin.createNewBlock(previousBlockHash, hash, nonce);
+}
+
+console.log('Total blocks:', bitcoin.chain.length);
+console.log('Chain is valid?', bitcoin.chainIsValid(bitcoin.chain));
+
+console.log('\n8. 체인 조작 시뮬레이션');
+console.log('-------------------');
+
+// 체인을 복사하고 조작
+const tamperedChain = JSON.parse(JSON.stringify(bitcoin.chain));
+tamperedChain[2].transactions[0].amount = 99999; // 트랜잭션 금액 변경
+
+console.log('Original chain is valid?', bitcoin.chainIsValid(bitcoin.chain));
