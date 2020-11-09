@@ -165,3 +165,14 @@ class Blockchain {
     });
     return correctBlock;
   }
+
+  /**
+   * 특정 트랜잭션을 ID로 조회
+   * @param {string} transactionId - 찾을 트랜잭션 ID
+   * @returns {object} 트랜잭션과 해당 블록 정보
+   */
+  getTransaction(transactionId) {
+    let correctTransaction = null;
+    let correctBlock = null;
+
+    this.chain.forEach(block => {
