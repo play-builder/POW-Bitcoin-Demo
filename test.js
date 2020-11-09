@@ -130,3 +130,19 @@ const tamperedChain = JSON.parse(JSON.stringify(bitcoin.chain));
 tamperedChain[2].transactions[0].amount = 99999; // 트랜잭션 금액 변경
 
 console.log('Original chain is valid?', bitcoin.chainIsValid(bitcoin.chain));
+console.log('Tampered chain is valid?', bitcoin.chainIsValid(tamperedChain));
+
+console.log('\n9. 주소 데이터 조회');
+console.log('-------------------');
+
+// 특정 주소의 트랜잭션 확인
+const aliceAddress = 'ALICE_ADDRESS_123';
+const aliceData = bitcoin.getAddressData(aliceAddress);
+
+console.log(`Address: ${aliceAddress}`);
+console.log('Transaction count:', aliceData.addressTransactions.length);
+console.log('Balance:', aliceData.addressBalance);
+console.log('Transactions:', aliceData.addressTransactions);
+
+console.log('\n10. 전체 블록체인 요약');
+console.log('-------------------');
