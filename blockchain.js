@@ -187,3 +187,14 @@ class Blockchain {
     return {
       transaction: correctTransaction,
       block: correctBlock
+    };
+  }
+
+  /**
+   * 특정 주소의 모든 트랜잭션과 잔액 조회
+   * @param {string} address - 조회할 주소
+   * @returns {object} 주소의 트랜잭션 목록과 잔액
+   */
+  getAddressData(address) {
+    const addressTransactions = [];
+    
