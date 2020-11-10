@@ -31,3 +31,36 @@ app.get('/blockchain', (req, res) => {
 app.post('/transaction', (req, res) => {
   const newTransaction = req.body;
   const blockIndex = bitcoin.addTransactionToPendingTransactions(newTransaction);
+  res.json({ note: `Transaction will be added in block ${blockIndex}.` });
+});
+
+/**
+ * POST /transaction/broadcast
+ * 트랜잭션 생성 후 네트워크에 브로드캐스트
+ */
+app.post('/transaction/broadcast', (req, res) => {
+  const newTransaction = bitcoin.createNewTransaction(
+    req.body.amount,
+    req.body.sender,
+    req.body.recipient
+  );
+
+  bitcoin.addTransactionToPendingTransactions(newTransaction);
+
+  // 네트워크의 모든 노드에 트랜잭션 전파
+  const requestPromises = [];
+  bitcoin.networkNodes.forEach(networkNodeUrl => {
+    const requestOptions = {
+      uri: networkNodeUrl + '/transaction',
+      method: 'POST',
+      body: newTransaction,
+      json: true
+    };
+
+    requestPromises.push(rp(requestOptions));
+  });
+
+  Promise.all(requestPromises)
+    .then(data => {
+      res.json({ note: 'Transaction created and broadcast successfully.' });
+    });
