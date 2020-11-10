@@ -163,3 +163,36 @@ app.post('/register-and-broadcast-node', (req, res) => {
   }
 
   // 기존 네트워크의 모든 노드에 새 노드 등록 요청
+  const regNodesPromises = [];
+  bitcoin.networkNodes.forEach(networkNodeUrl => {
+    const requestOptions = {
+      uri: networkNodeUrl + '/register-node',
+      method: 'POST',
+      body: { newNodeUrl: newNodeUrl },
+      json: true
+    };
+
+    regNodesPromises.push(rp(requestOptions));
+  });
+
+  Promise.all(regNodesPromises)
+    .then(data => {
+      // 새 노드에 기존 네트워크의 모든 노드 정보 전송
+      const bulkRegisterOptions = {
+        uri: newNodeUrl + '/register-nodes-bulk',
+        method: 'POST',
+        body: { allNetworkNodes: [...bitcoin.networkNodes, bitcoin.currentNodeUrl] },
+        json: true
+      };
+
+      return rp(bulkRegisterOptions);
+    })
+    .then(data => {
+      res.json({ note: 'New node registered with network successfully.' });
+    });
+});
+
+/**
+ * POST /register-node
+ * 개별 노드 등록
+ */
