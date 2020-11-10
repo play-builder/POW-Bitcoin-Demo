@@ -64,3 +64,36 @@ app.post('/transaction/broadcast', (req, res) => {
     .then(data => {
       res.json({ note: 'Transaction created and broadcast successfully.' });
     });
+});
+
+/**
+ * GET /mine
+ * 새로운 블록 채굴
+ */
+app.get('/mine', (req, res) => {
+  const lastBlock = bitcoin.getLastBlock();
+  const previousBlockHash = lastBlock['hash'];
+  
+  const currentBlockData = {
+    transactions: bitcoin.pendingTxs,
+    index: lastBlock['index'] + 1
+  };
+
+  // Proof of Work 수행
+  const nonce = bitcoin.proofOfWork(previousBlockHash, currentBlockData);
+  const blockHash = bitcoin.hashBlock(previousBlockHash, currentBlockData, nonce);
+
+  // 채굴 보상 트랜잭션 생성
+  const newBlock = bitcoin.createNewBlock(previousBlockHash, blockHash, nonce);
+
+  // 새로 채굴된 블록을 네트워크에 브로드캐스트
+  const requestPromises = [];
+  bitcoin.networkNodes.forEach(networkNodeUrl => {
+    const requestOptions = {
+      uri: networkNodeUrl + '/receive-new-block',
+      method: 'POST',
+      body: { newBlock: newBlock },
+      json: true
+    };
+
+    requestPromises.push(rp(requestOptions));
