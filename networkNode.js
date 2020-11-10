@@ -97,3 +97,36 @@ app.get('/mine', (req, res) => {
     };
 
     requestPromises.push(rp(requestOptions));
+  });
+
+  Promise.all(requestPromises)
+    .then(data => {
+      // 채굴 보상 트랜잭션 브로드캐스트
+      const requestOptions = {
+        uri: bitcoin.currentNodeUrl + '/transaction/broadcast',
+        method: 'POST',
+        body: {
+          amount: 12.5,
+          sender: "00", // 시스템에서 발행
+          recipient: nodeAddress
+        },
+        json: true
+      };
+
+      return rp(requestOptions);
+    })
+    .then(data => {
+      res.json({
+        note: "New block mined & broadcast successfully",
+        block: newBlock
+      });
+    });
+});
+
+/**
+ * POST /receive-new-block
+ * 다른 노드로부터 새로운 블록 수신
+ */
+app.post('/receive-new-block', (req, res) => {
+  const newBlock = req.body.newBlock;
+  const lastBlock = bitcoin.getLastBlock();
