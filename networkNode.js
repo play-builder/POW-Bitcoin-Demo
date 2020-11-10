@@ -130,3 +130,36 @@ app.get('/mine', (req, res) => {
 app.post('/receive-new-block', (req, res) => {
   const newBlock = req.body.newBlock;
   const lastBlock = bitcoin.getLastBlock();
+  
+  // 블록 검증
+  const correctHash = lastBlock.hash === newBlock.parentHash;
+  const correctIndex = lastBlock['index'] + 1 === newBlock['index'];
+
+  if (correctHash && correctIndex) {
+    bitcoin.chain.push(newBlock);
+    bitcoin.pendingTxs = [];
+    res.json({
+      note: 'New block received and accepted.',
+      newBlock: newBlock
+    });
+  } else {
+    res.json({
+      note: 'New block rejected.',
+      newBlock: newBlock
+    });
+  }
+});
+
+/**
+ * POST /register-and-broadcast-node
+ * 새로운 노드를 등록하고 네트워크에 브로드캐스트
+ */
+app.post('/register-and-broadcast-node', (req, res) => {
+  const newNodeUrl = req.body.newNodeUrl;
+  
+  // 네트워크 노드 목록에 추가 (중복 방지)
+  if (bitcoin.networkNodes.indexOf(newNodeUrl) == -1) {
+    bitcoin.networkNodes.push(newNodeUrl);
+  }
+
+  // 기존 네트워크의 모든 노드에 새 노드 등록 요청
