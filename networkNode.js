@@ -229,3 +229,20 @@ app.post('/register-nodes-bulk', (req, res) => {
 
 /**
  * GET /consensus
+ * 합의 알고리즘 - 가장 긴 체인을 선택
+ */
+app.get('/consensus', (req, res) => {
+  const requestPromises = [];
+  
+  bitcoin.networkNodes.forEach(networkNodeUrl => {
+    const requestOptions = {
+      uri: networkNodeUrl + '/blockchain',
+      method: 'GET',
+      json: true
+    };
+
+    requestPromises.push(rp(requestOptions));
+  });
+
+  Promise.all(requestPromises)
+    .then(blockchains => {
