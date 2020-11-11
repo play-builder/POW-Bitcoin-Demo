@@ -295,3 +295,20 @@ app.get('/block/:blockHash', (req, res) => {
  * GET /transaction/:transactionId
  * 특정 트랜잭션 조회
  */
+app.get('/transaction/:transactionId', (req, res) => {
+  const transactionId = req.params.transactionId;
+  const transactionData = bitcoin.getTransaction(transactionId);
+  res.json({
+    transaction: transactionData.transaction,
+    block: transactionData.block
+  });
+});
+
+/**
+ * GET /address/:address
+ * 특정 주소의 트랜잭션 및 잔액 조회
+ */
+app.get('/address/:address', (req, res) => {
+  const address = req.params.address;
+  const addressData = bitcoin.getAddressData(address);
+  res.json({
