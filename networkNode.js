@@ -279,3 +279,19 @@ app.get('/consensus', (req, res) => {
     });
 });
 
+/**
+ * GET /block/:blockHash
+ * 특정 블록 조회
+ */
+app.get('/block/:blockHash', (req, res) => {
+  const blockHash = req.params.blockHash;
+  const correctBlock = bitcoin.getBlock(blockHash);
+  res.json({
+    block: correctBlock
+  });
+});
+
+/**
+ * GET /transaction/:transactionId
+ * 특정 트랜잭션 조회
+ */
