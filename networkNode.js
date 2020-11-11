@@ -312,3 +312,20 @@ app.get('/address/:address', (req, res) => {
   const address = req.params.address;
   const addressData = bitcoin.getAddressData(address);
   res.json({
+    addressData: addressData
+  });
+});
+
+/**
+ * GET /block-explorer
+ * 블록 탐색기 UI 제공
+ */
+app.get('/block-explorer', (req, res) => {
+  res.sendFile('./public/index.html', { root: __dirname });
+});
+
+// 서버 시작
+const port = process.argv[2];
+app.listen(port, () => {
+  console.log(`Listening on port ${port}...`);
+});
