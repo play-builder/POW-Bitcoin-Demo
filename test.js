@@ -146,3 +146,20 @@ console.log('Transactions:', aliceData.addressTransactions);
 
 console.log('\n10. 전체 블록체인 요약');
 console.log('-------------------');
+
+console.log('Total Blocks:', bitcoin.chain.length);
+console.log('Pending Transactions:', bitcoin.pendingTxs.length);
+console.log('\nAll Blocks:');
+
+bitcoin.chain.forEach((block, index) => {
+  console.log(`\n  Block #${index}:`);
+  console.log(`    Hash: ${block.hash}`);
+  console.log(`    Parent Hash: ${block.parentHash}`);
+  console.log(`    Nonce: ${block.nonce}`);
+  console.log(`    Transactions: ${block.transactions.length}`);
+  console.log(`    Timestamp: ${new Date(block.timestamp).toLocaleString()}`);
+});
+
+console.log('\n========================================');
+console.log('테스트 완료!');
+console.log('========================================\n');
