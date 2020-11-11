@@ -246,3 +246,19 @@ app.get('/consensus', (req, res) => {
 
   Promise.all(requestPromises)
     .then(blockchains => {
+      const currentChainLength = bitcoin.chain.length;
+      let maxChainLength = currentChainLength;
+      let newLongestChain = null;
+      let newPendingTransactions = null;
+
+      // 가장 긴 체인 찾기
+      blockchains.forEach(blockchain => {
+        if (blockchain.chain.length > maxChainLength) {
+          maxChainLength = blockchain.chain.length;
+          newLongestChain = blockchain.chain;
+          newPendingTransactions = blockchain.pendingTxs;
+        }
+      });
+
+      // 더 긴 체인이 없거나 유효하지 않은 경우
+      if (!newLongestChain || (newLongestChain && !bitcoin.chainIsValid(newLongestChain))) {
