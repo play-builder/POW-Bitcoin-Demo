@@ -196,3 +196,36 @@ app.post('/register-and-broadcast-node', (req, res) => {
  * POST /register-node
  * 개별 노드 등록
  */
+app.post('/register-node', (req, res) => {
+  const newNodeUrl = req.body.newNodeUrl;
+  const nodeNotAlreadyPresent = bitcoin.networkNodes.indexOf(newNodeUrl) == -1;
+  const notCurrentNode = bitcoin.currentNodeUrl !== newNodeUrl;
+  
+  if (nodeNotAlreadyPresent && notCurrentNode) {
+    bitcoin.networkNodes.push(newNodeUrl);
+  }
+  
+  res.json({ note: 'New node registered successfully.' });
+});
+
+/**
+ * POST /register-nodes-bulk
+ * 여러 노드를 한 번에 등록
+ */
+app.post('/register-nodes-bulk', (req, res) => {
+  const allNetworkNodes = req.body.allNetworkNodes;
+  
+  allNetworkNodes.forEach(networkNodeUrl => {
+    const nodeNotAlreadyPresent = bitcoin.networkNodes.indexOf(networkNodeUrl) == -1;
+    const notCurrentNode = bitcoin.currentNodeUrl !== networkNodeUrl;
+    
+    if (nodeNotAlreadyPresent && notCurrentNode) {
+      bitcoin.networkNodes.push(networkNodeUrl);
+    }
+  });
+
+  res.json({ note: 'Bulk registration successful.' });
+});
+
+/**
+ * GET /consensus
