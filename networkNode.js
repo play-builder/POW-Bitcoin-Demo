@@ -262,3 +262,20 @@ app.get('/consensus', (req, res) => {
 
       // 더 긴 체인이 없거나 유효하지 않은 경우
       if (!newLongestChain || (newLongestChain && !bitcoin.chainIsValid(newLongestChain))) {
+        res.json({
+          note: 'Current chain has not been replaced.',
+          chain: bitcoin.chain
+        });
+      }
+      // 유효한 더 긴 체인으로 교체
+      else {
+        bitcoin.chain = newLongestChain;
+        bitcoin.pendingTxs = newPendingTransactions;
+        res.json({
+          note: 'This chain has been replaced.',
+          chain: bitcoin.chain
+        });
+      }
+    });
+});
+
