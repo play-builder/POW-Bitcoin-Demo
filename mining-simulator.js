@@ -292,3 +292,101 @@ class MiningSimulator {
 
     const lastBlock = this.blockchain.getLastBlock();
     const parentHash = lastBlock.hash;
+    const blockData = {
+      transactions: this.blockchain.pendingTxs,
+      index: lastBlock.index + 1
+    };
+
+    // 임시로 POW 함수 오버라이드
+    const target = '0'.repeat(difficulty);
+    let nonce = 0;
+    let hash = this.blockchain.hashBlock(parentHash, blockData, nonce);
+    
+    while (!hash.startsWith(target)) {
+      nonce++;
+      hash = this.blockchain.hashBlock(parentHash, blockData, nonce);
+    }
+
+    const newBlock = this.blockchain.createNewBlock(parentHash, hash, nonce);
+
+    const endTime = Date.now();
+    const miningTime = endTime - startTime;
+
+    return {
+      block: newBlock,
+      nonce,
+      timeMs: miningTime,
+      miner: minerName
+    };
+  }
+
+  /**
+   * 최종 통계 표시
+   */
+  displayFinalStats() {
+    console.log('\n\n╔══════════════════════════════════════════════════════════════════════╗');
+    console.log('║                        최종 채굴 통계                                ║');
+    console.log('╚══════════════════════════════════════════════════════════════════════╝\n');
+
+    const sortedMiners = Array.from(this.minerStats.entries())
+      .sort((a, b) => b[1].blocksMinedBlocks - a[1].blocksMinedBlocks);
+
+    console.log('🏆 채굴자 순위:\n');
+    
+    sortedMiners.forEach(([name, stats], idx) => {
+      const avgTime = stats.totalTime / stats.blocksMinedBlocks / 1000;
+      const avgAttempts = stats.totalAttempts / stats.blocksMinedBlocks;
+      
+      console.log(`${idx + 1}. ${name}`);
+      console.log(`   채굴 블록: ${stats.blocksMinedBlocks}`);
+      console.log(`   총 보상: ${stats.totalRewards} BTC`);
+      console.log(`   평균 시간: ${avgTime.toFixed(2)}초`);
+      console.log(`   평균 시도: ${avgAttempts.toLocaleString()}`);
+      console.log('');
+    });
+
+    console.log(`\n📊 전체 블록체인: ${this.blockchain.chain.length} 블록`);
+    console.log(`✅ 체인 유효성: ${this.blockchain.chainIsValid(this.blockchain.chain) ? '통과' : '실패'}\n`);
+  }
+
+  /**
+   * Sleep 유틸리티
+   */
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * 메뉴 표시
+   */
+  displayMenu() {
+    console.log('\n╔══════════════════════════════════════════════════════════════════════╗');
+    console.log('║              ⛏️  BITCOIN MINING SIMULATOR  ⛏️                         ║');
+    console.log('╚══════════════════════════════════════════════════════════════════════╝\n');
+    console.log('사용 가능한 시뮬레이션:\n');
+    console.log('1. 단일 블록 채굴');
+    console.log('2. 연속 채굴 (30초)');
+    console.log('3. 경쟁 채굴');
+    console.log('4. 난이도 조절 시뮬레이션\n');
+  }
+}
+
+// 실행
+if (require.main === module) {
+  const simulator = new MiningSimulator();
+  
+  (async () => {
+    simulator.displayMenu();
+    
+    console.log('시연: 경쟁 채굴 시뮬레이션을 시작합니다...\n');
+    await simulator.competitiveMining(3, 5);
+    
+    console.log('\n\n다른 시뮬레이션을 실행하려면:');
+    console.log('  const simulator = new MiningSimulator();');
+    console.log('  simulator.continuousMining(["Alice", "Bob"], 30000);');
+    console.log('  simulator.difficultyAdjustment(10000);');
+    console.log('\n');
+  })();
+}
+
+module.exports = MiningSimulator;
