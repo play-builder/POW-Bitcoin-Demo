@@ -194,3 +194,101 @@ class MiningSimulator {
     const miners = Array.from({ length: numMiners }, (_, i) => `Miner${i + 1}`);
     
     for (let i = 0; i < numBlocks; i++) {
+      console.log(`\n라운드 ${i + 1}/${numBlocks}`);
+      console.log('─'.repeat(75));
+      
+      // 모든 채굴자가 동시에 시작
+      const promises = miners.map(miner => {
+        return new Promise(resolve => {
+          const startTime = Date.now();
+          
+          // 임시 블록체인 사용 (경쟁 시뮬레이션)
+          const tempBlockchain = new Blockchain();
+          tempBlockchain.chain = JSON.parse(JSON.stringify(this.blockchain.chain));
+          
+          const rewardTx = tempBlockchain.createNewTransaction(12.5, '00', miner);
+          tempBlockchain.addTransactionToPendingTransactions(rewardTx);
+
+          const lastBlock = tempBlockchain.getLastBlock();
+          const parentHash = lastBlock.hash;
+          const blockData = {
+            transactions: tempBlockchain.pendingTxs,
+            index: lastBlock.index + 1
+          };
+
+          const nonce = tempBlockchain.proofOfWork(parentHash, blockData);
+          const endTime = Date.now();
+          
+          resolve({
+            miner,
+            nonce,
+            time: endTime - startTime
+          });
+        });
+      });
+
+      // 가장 빨리 완료한 채굴자가 승리
+      const winner = await Promise.race(promises);
+      
+      // 실제로 블록 생성
+      const result = this.mineBlock(winner.miner);
+      
+      console.log(`🏆 승자: ${winner.miner}`);
+      console.log(`   Nonce: ${winner.nonce.toLocaleString()}`);
+      console.log(`   시간: ${(winner.time / 1000).toFixed(2)}초`);
+      
+      await this.sleep(500);
+    }
+
+    this.displayFinalStats();
+  }
+
+  /**
+   * 난이도 조절 시뮬레이션
+   */
+  async difficultyAdjustment(targetBlockTime = 10000) {
+    console.log('\n⚙️  난이도 조절 시뮬레이션\n');
+    console.log(`목표 블록 시간: ${targetBlockTime / 1000}초\n`);
+
+    const difficulties = [3, 4, 5];
+    let currentDifficulty = 4;
+
+    for (let i = 0; i < 5; i++) {
+      console.log(`\n블록 ${i + 1} 채굴 중... (난이도: ${currentDifficulty})`);
+      
+      const result = this.mineBlockWithDifficulty('AutoMiner', currentDifficulty);
+      
+      console.log(`✅ 완료 - 시간: ${(result.timeMs / 1000).toFixed(2)}초, Nonce: ${result.nonce.toLocaleString()}`);
+      
+      // 난이도 조절
+      if (result.timeMs < targetBlockTime * 0.8) {
+        if (currentDifficulty < 6) {
+          currentDifficulty++;
+          console.log(`⬆️  난이도 증가: ${currentDifficulty}`);
+        }
+      } else if (result.timeMs > targetBlockTime * 1.2) {
+        if (currentDifficulty > 3) {
+          currentDifficulty--;
+          console.log(`⬇️  난이도 감소: ${currentDifficulty}`);
+        }
+      } else {
+        console.log(`✔️  난이도 유지: ${currentDifficulty}`);
+      }
+    }
+
+    console.log('\n💡 비트코인은 2016블록마다 자동으로 난이도를 조절합니다.');
+  }
+
+  /**
+   * 특정 난이도로 블록 채굴
+   */
+  mineBlockWithDifficulty(minerName, difficulty) {
+    this.initMiner(minerName);
+    
+    const startTime = Date.now();
+    
+    const rewardTx = this.blockchain.createNewTransaction(12.5, '00', minerName);
+    this.blockchain.addTransactionToPendingTransactions(rewardTx);
+
+    const lastBlock = this.blockchain.getLastBlock();
+    const parentHash = lastBlock.hash;
