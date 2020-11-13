@@ -139,3 +139,145 @@ class ForkSimulator {
     
     // 모든 노드에 전파
     this.nodeB.chain.push(commonBlock);
+    this.nodeC.chain.push(commonBlock);
+    
+    this.compareChains();
+
+    console.log('\n\n⚡ Fork 발생!');
+    console.log('─'.repeat(80));
+    console.log('노드 A와 노드 B가 거의 동시에 서로 다른 블록을 채굴합니다.\n');
+
+    // 노드 A에서 블록 2A 채굴
+    console.log('🔷 노드 A: 블록 2A 채굴 중...');
+    const txA = this.nodeA.createNewTransaction(100, 'Alice', 'Bob');
+    this.nodeA.addTransactionToPendingTransactions(txA);
+    
+    lastBlock = this.nodeA.getLastBlock();
+    parentHash = lastBlock.hash;
+    blockData = {
+      transactions: this.nodeA.pendingTxs,
+      index: lastBlock.index + 1
+    };
+    
+    nonce = this.nodeA.proofOfWork(parentHash, blockData);
+    hash = this.nodeA.hashBlock(parentHash, blockData, nonce);
+    const block2A = this.nodeA.createNewBlock(parentHash, hash, nonce);
+    
+    console.log(`✅ 노드 A가 블록 2A 채굴 완료 (hash: ${block2A.hash.substring(0, 12)}...)`);
+
+    // 노드 B에서 블록 2B 채굴 (다른 트랜잭션)
+    console.log('\n🔶 노드 B: 블록 2B 채굴 중...');
+    const txB = this.nodeB.createNewTransaction(200, 'Charlie', 'Dave');
+    this.nodeB.addTransactionToPendingTransactions(txB);
+    
+    lastBlock = this.nodeB.getLastBlock();
+    parentHash = lastBlock.hash;
+    blockData = {
+      transactions: this.nodeB.pendingTxs,
+      index: lastBlock.index + 1
+    };
+    
+    nonce = this.nodeB.proofOfWork(parentHash, blockData);
+    hash = this.nodeB.hashBlock(parentHash, blockData, nonce);
+    const block2B = this.nodeB.createNewBlock(parentHash, hash, nonce);
+    
+    console.log(`✅ 노드 B가 블록 2B 채굴 완료 (hash: ${block2B.hash.substring(0, 12)}...)`);
+
+    // 노드 C는 먼저 받은 블록 2A를 채택
+    console.log('\n🔹 노드 C: 노드 A로부터 블록 2A를 먼저 수신');
+    this.nodeC.chain.push(block2A);
+
+    console.log('\n⚠️  Fork 상태:');
+    this.compareChains();
+
+    console.log('\n📌 현재 상황:');
+    console.log('• 노드 A: Genesis → Block 1 → Block 2A');
+    console.log('• 노드 B: Genesis → Block 1 → Block 2B');
+    console.log('• 노드 C: Genesis → Block 1 → Block 2A');
+    console.log('\n⚠️  블록체인이 두 갈래로 분기되었습니다!');
+
+    return { block2A, block2B };
+  }
+
+  /**
+   * 시나리오 3: Fork 해결 (더 긴 체인 승리)
+   */
+  scenario3_ForkResolution(block2A, block2B) {
+    console.log('\n\n╔════════════════════════════════════════════════════════╗');
+    console.log('║   시나리오 3: Fork 해결 (Longest Chain Rule)          ║');
+    console.log('╚════════════════════════════════════════════════════════╝\n');
+
+    console.log('상황: 노드 A가 블록 3A를 먼저 채굴하여 더 긴 체인을 만듦');
+    console.log('─'.repeat(80));
+
+    // 노드 A에서 블록 3A 채굴
+    console.log('\n🔷 노드 A: 블록 3A 채굴 중...');
+    const txA3 = this.nodeA.createNewTransaction(150, 'Eve', 'Frank');
+    this.nodeA.addTransactionToPendingTransactions(txA3);
+    
+    let lastBlock = this.nodeA.getLastBlock();
+    let parentHash = lastBlock.hash;
+    let blockData = {
+      transactions: this.nodeA.pendingTxs,
+      index: lastBlock.index + 1
+    };
+    
+    let nonce = this.nodeA.proofOfWork(parentHash, blockData);
+    let hash = this.nodeA.hashBlock(parentHash, blockData, nonce);
+    const block3A = this.nodeA.createNewBlock(parentHash, hash, nonce);
+    
+    console.log(`✅ 노드 A가 블록 3A 채굴 완료`);
+    console.log(`   체인 길이: ${this.nodeA.chain.length}`);
+
+    console.log('\n단계: 합의 알고리즘 실행');
+    console.log('─'.repeat(80));
+    console.log('모든 노드가 네트워크의 체인들을 비교합니다.\n');
+
+    // 노드 B의 체인과 노드 A의 체인 비교
+    console.log('🔶 노드 B:');
+    console.log(`   현재 체인 길이: ${this.nodeB.chain.length}`);
+    console.log(`   노드 A의 체인 길이: ${this.nodeA.chain.length}`);
+    console.log(`   노드 A의 체인이 더 길고 유효함 → 체인 교체!`);
+    
+    // 체인 교체
+    this.nodeB.chain = JSON.parse(JSON.stringify(this.nodeA.chain));
+    console.log(`   ✅ 노드 B가 체인을 교체했습니다.`);
+
+    console.log('\n🔹 노드 C:');
+    console.log(`   현재 체인 길이: ${this.nodeC.chain.length}`);
+    console.log(`   노드 A의 체인 길이: ${this.nodeA.chain.length}`);
+    console.log(`   노드 A의 체인이 더 길고 유효함 → 체인 교체!`);
+    
+    this.nodeC.chain = JSON.parse(JSON.stringify(this.nodeA.chain));
+    console.log(`   ✅ 노드 C가 체인을 교체했습니다.`);
+
+    console.log('\n✅ Fork 해결 완료!');
+    this.compareChains();
+
+    console.log('\n📌 최종 상태:');
+    console.log('• 모든 노드: Genesis → Block 1 → Block 2A → Block 3A');
+    console.log('\n💡 핵심 원리:');
+    console.log('─'.repeat(80));
+    console.log('• 가장 긴 유효한 체인이 정당한 체인으로 인정됩니다.');
+    console.log('• Block 2B는 버려졌습니다 (Orphan Block).');
+    console.log('• Block 2B의 트랜잭션은 다시 mempool로 돌아갑니다.');
+    console.log('• 이것이 비트코인의 "Longest Chain Rule"입니다.');
+  }
+
+  /**
+   * 시나리오 4: 51% 공격 시뮬레이션
+   */
+  scenario4_51PercentAttack() {
+    console.log('\n\n╔════════════════════════════════════════════════════════╗');
+    console.log('║   시나리오 4: 51% 공격 개념 설명                       ║');
+    console.log('╚════════════════════════════════════════════════════════╝\n');
+
+    console.log('51% 공격이란?');
+    console.log('─'.repeat(80));
+    console.log('공격자가 네트워크 전체 해시파워의 51% 이상을 장악하여');
+    console.log('악의적인 체인을 만들고, 정직한 체인보다 빠르게 성장시켜');
+    console.log('네트워크가 악의적인 체인을 채택하도록 만드는 공격입니다.\n');
+
+    // 초기화
+    this.nodeA = new Blockchain(); // 정직한 네트워크
+    this.nodeB = new Blockchain(); // 공격자
