@@ -281,3 +281,150 @@ class ForkSimulator {
     // 초기화
     this.nodeA = new Blockchain(); // 정직한 네트워크
     this.nodeB = new Blockchain(); // 공격자
+
+    console.log('시뮬레이션 설정:');
+    console.log('• 노드 A: 정직한 네트워크 (49% 해시파워)');
+    console.log('• 노드 B: 공격자 (51% 해시파워)');
+    console.log('─'.repeat(80));
+
+    // 공통 블록 생성
+    console.log('\n단계 1: 초기 상태');
+    const tx1 = this.nodeA.createNewTransaction(100, 'Alice', 'Bob');
+    this.nodeA.addTransactionToPendingTransactions(tx1);
+    
+    let lastBlock = this.nodeA.getLastBlock();
+    let parentHash = lastBlock.hash;
+    let blockData = {
+      transactions: this.nodeA.pendingTxs,
+      index: lastBlock.index + 1
+    };
+    
+    let nonce = this.nodeA.proofOfWork(parentHash, blockData);
+    let hash = this.nodeA.hashBlock(parentHash, blockData, nonce);
+    const block1 = this.nodeA.createNewBlock(parentHash, hash, nonce);
+    
+    this.nodeB.chain.push(block1);
+
+    this.visualizeChain(this.nodeA, '정직한 네트워크');
+    this.visualizeChain(this.nodeB, '공격자');
+
+    console.log('\n단계 2: 공격자가 이중 지불 시도');
+    console.log('─'.repeat(80));
+    console.log('공격자(Bob)가 Alice에게 100 BTC를 지불하고 상품을 받음');
+    console.log('동시에 은밀하게 같은 100 BTC를 자신(Bob)에게 돌려주는');
+    console.log('비밀 체인을 만들기 시작함\n');
+
+    // 정직한 네트워크: Alice에게 지불
+    console.log('🔷 정직한 네트워크: Block 2 (Bob → Alice 100 BTC)');
+    const txHonest = this.nodeA.createNewTransaction(100, 'Bob', 'Alice');
+    this.nodeA.addTransactionToPendingTransactions(txHonest);
+    
+    lastBlock = this.nodeA.getLastBlock();
+    parentHash = lastBlock.hash;
+    blockData = {
+      transactions: this.nodeA.pendingTxs,
+      index: lastBlock.index + 1
+    };
+    
+    nonce = this.nodeA.proofOfWork(parentHash, blockData);
+    hash = this.nodeA.hashBlock(parentHash, blockData, nonce);
+    this.nodeA.createNewBlock(parentHash, hash, nonce);
+
+    // 공격자: 자신에게 돌려줌 (비밀 체인)
+    console.log('🔶 공격자의 비밀 체인: Block 2\' (Bob → Bob 100 BTC)');
+    const txAttack = this.nodeB.createNewTransaction(100, 'Bob', 'Bob');
+    this.nodeB.addTransactionToPendingTransactions(txAttack);
+    
+    lastBlock = this.nodeB.getLastBlock();
+    parentHash = lastBlock.hash;
+    blockData = {
+      transactions: this.nodeB.pendingTxs,
+      index: lastBlock.index + 1
+    };
+    
+    nonce = this.nodeB.proofOfWork(parentHash, blockData);
+    hash = this.nodeB.hashBlock(parentHash, blockData, nonce);
+    this.nodeB.createNewBlock(parentHash, hash, nonce);
+
+    console.log('\n단계 3: 공격자가 더 많은 해시파워로 블록을 더 빠르게 채굴');
+    console.log('─'.repeat(80));
+    
+    // 공격자가 2개의 블록을 더 채굴 (51% 해시파워로 더 빠름)
+    for (let i = 0; i < 2; i++) {
+      const tx = this.nodeB.createNewTransaction(10, `Attacker`, `Victim${i}`);
+      this.nodeB.addTransactionToPendingTransactions(tx);
+      
+      lastBlock = this.nodeB.getLastBlock();
+      parentHash = lastBlock.hash;
+      blockData = {
+        transactions: this.nodeB.pendingTxs,
+        index: lastBlock.index + 1
+      };
+      
+      nonce = this.nodeB.proofOfWork(parentHash, blockData);
+      hash = this.nodeB.hashBlock(parentHash, blockData, nonce);
+      this.nodeB.createNewBlock(parentHash, hash, nonce);
+      
+      console.log(`🔶 공격자: Block ${this.nodeB.chain.length - 1} 채굴 완료`);
+    }
+
+    console.log('\n단계 4: 공격자가 더 긴 체인을 공개');
+    console.log('─'.repeat(80));
+
+    this.visualizeChain(this.nodeA, '정직한 네트워크');
+    this.visualizeChain(this.nodeB, '공격자의 체인 (더 길다!)');
+
+    console.log('\n⚠️  공격 성공!');
+    console.log('─'.repeat(80));
+    console.log('• 공격자의 체인이 더 길기 때문에 네트워크가 이를 채택합니다.');
+    console.log('• Alice에게 지불한 100 BTC 트랜잭션이 무효화됩니다.');
+    console.log('• 공격자는 상품을 받았지만 돈은 돌려받았습니다 (이중 지불!).');
+    console.log('\n💡 방어 방법:');
+    console.log('─'.repeat(80));
+    console.log('• 더 많은 확인 블록을 기다립니다 (비트코인: 6개 권장).');
+    console.log('• 네트워크 해시파워를 분산시킵니다.');
+    console.log('• 거액 거래는 더 많은 확인을 요구합니다.');
+    console.log('• 비트코인의 거대한 해시파워는 51% 공격을 경제적으로 불가능하게 만듭니다.');
+  }
+
+  /**
+   * 전체 시뮬레이션 실행
+   */
+  runAllScenarios() {
+    console.log('\n');
+    console.log('╔══════════════════════════════════════════════════════════╗');
+    console.log('║                                                          ║');
+    console.log('║     블록체인 Fork 시뮬레이션 & 합의 알고리즘             ║');
+    console.log('║                                                          ║');
+    console.log('╚══════════════════════════════════════════════════════════╝');
+
+    // 시나리오 1
+    this.scenario1_NormalPropagation();
+
+    // 잠시 대기
+    console.log('\n\n' + '='.repeat(80));
+    console.log('다음 시나리오로 진행합니다...');
+    console.log('='.repeat(80));
+
+    // 시나리오 2
+    const { block2A, block2B } = this.scenario2_ForkOccurs();
+
+    // 시나리오 3
+    this.scenario3_ForkResolution(block2A, block2B);
+
+    // 시나리오 4
+    this.scenario4_51PercentAttack();
+
+    console.log('\n\n╔════════════════════════════════════════════════════════╗');
+    console.log('║              모든 시나리오 완료! 🎉                     ║');
+    console.log('╚════════════════════════════════════════════════════════╝\n');
+  }
+}
+
+// 실행
+if (require.main === module) {
+  const simulator = new ForkSimulator();
+  simulator.runAllScenarios();
+}
+
+module.exports = ForkSimulator;
