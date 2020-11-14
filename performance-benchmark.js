@@ -140,3 +140,146 @@ class PerformanceBenchmark {
     
     const startTime = Date.now();
 
+    for (let i = 0; i < numTransactions; i++) {
+      const tx = blockchain.createNewTransaction(
+        Math.floor(Math.random() * 1000),
+        `Sender${i}`,
+        `Recipient${i}`
+      );
+      blockchain.addTransactionToPendingTransactions(tx);
+    }
+
+    const endTime = Date.now();
+    const totalTime = endTime - startTime;
+    const tps = numTransactions / (totalTime / 1000);
+
+    console.log('✅ 트랜잭션 생성 완료\n');
+    console.log('📊 통계:');
+    console.log('─'.repeat(60));
+    console.log(`총 트랜잭션: ${numTransactions.toLocaleString()}`);
+    console.log(`소요 시간: ${totalTime}ms`);
+    console.log(`TPS (초당 트랜잭션): ${tps.toFixed(0)}`);
+    console.log(`트랜잭션당 평균 시간: ${(totalTime / numTransactions).toFixed(3)}ms`);
+
+    this.results.tests.push({
+      name: 'Transaction Throughput',
+      numTransactions,
+      totalTime,
+      tps: tps.toFixed(0)
+    });
+  }
+
+  /**
+   * 테스트 3: 체인 유효성 검증 속도
+   */
+  testChainValidation(chainLength = 50) {
+    console.log('\n\n╔════════════════════════════════════════════════════════╗');
+    console.log('║   테스트 3: 체인 유효성 검증 속도                      ║');
+    console.log('╚════════════════════════════════════════════════════════╝\n');
+
+    console.log(`${chainLength}개의 블록으로 체인 생성 중...\n`);
+
+    const blockchain = new Blockchain();
+
+    // 체인 생성
+    for (let i = 0; i < chainLength - 1; i++) {
+      const tx = blockchain.createNewTransaction(100, `S${i}`, `R${i}`);
+      blockchain.addTransactionToPendingTransactions(tx);
+
+      const lastBlock = blockchain.getLastBlock();
+      const parentHash = lastBlock.hash;
+      const blockData = {
+        transactions: blockchain.pendingTxs,
+        index: lastBlock.index + 1
+      };
+
+      const nonce = blockchain.proofOfWork(parentHash, blockData);
+      const hash = blockchain.hashBlock(parentHash, blockData, nonce);
+      blockchain.createNewBlock(parentHash, hash, nonce);
+
+      if ((i + 1) % 10 === 0) {
+        console.log(`${i + 1}개 블록 생성 완료...`);
+      }
+    }
+
+    console.log(`\n✅ ${chainLength}개 블록 체인 생성 완료`);
+    console.log('\n체인 유효성 검증 중...');
+
+    // 유효성 검증
+    const startTime = Date.now();
+    const isValid = blockchain.chainIsValid(blockchain.chain);
+    const endTime = Date.now();
+    const validationTime = endTime - startTime;
+
+    console.log(`\n✅ 검증 완료: ${isValid ? '유효함' : '유효하지 않음'}\n`);
+    console.log('📊 통계:');
+    console.log('─'.repeat(60));
+    console.log(`체인 길이: ${chainLength} 블록`);
+    console.log(`검증 시간: ${validationTime}ms`);
+    console.log(`블록당 평균 검증 시간: ${(validationTime / chainLength).toFixed(3)}ms`);
+
+    this.results.tests.push({
+      name: 'Chain Validation Speed',
+      chainLength,
+      validationTime,
+      isValid
+    });
+  }
+
+  /**
+   * 테스트 4: 메모리 사용량
+   */
+  testMemoryUsage(numBlocks = 100) {
+    console.log('\n\n╔════════════════════════════════════════════════════════╗');
+    console.log('║   테스트 4: 메모리 사용량                              ║');
+    console.log('╚════════════════════════════════════════════════════════╝\n');
+
+    // 가비지 컬렉션 강제 실행 (가능한 경우)
+    if (global.gc) {
+      global.gc();
+    }
+
+    const startMemory = process.memoryUsage();
+    console.log('시작 메모리:');
+    console.log(`  Heap Used: ${(startMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`);
+    console.log(`  External: ${(startMemory.external / 1024 / 1024).toFixed(2)} MB\n`);
+
+    console.log(`${numBlocks}개의 블록 생성 중...\n`);
+
+    const blockchain = new Blockchain();
+
+    for (let i = 0; i < numBlocks - 1; i++) {
+      // 여러 트랜잭션 추가
+      for (let j = 0; j < 5; j++) {
+        const tx = blockchain.createNewTransaction(100, `S${i}-${j}`, `R${i}-${j}`);
+        blockchain.addTransactionToPendingTransactions(tx);
+      }
+
+      const lastBlock = blockchain.getLastBlock();
+      const parentHash = lastBlock.hash;
+      const blockData = {
+        transactions: blockchain.pendingTxs,
+        index: lastBlock.index + 1
+      };
+
+      const nonce = blockchain.proofOfWork(parentHash, blockData);
+      const hash = blockchain.hashBlock(parentHash, blockData, nonce);
+      blockchain.createNewBlock(parentHash, hash, nonce);
+
+      if ((i + 1) % 20 === 0) {
+        const currentMemory = process.memoryUsage();
+        console.log(`${i + 1}개 블록 - Heap: ${(currentMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`);
+      }
+    }
+
+    const endMemory = process.memoryUsage();
+    const memoryIncrease = endMemory.heapUsed - startMemory.heapUsed;
+
+    console.log('\n✅ 블록 생성 완료\n');
+    console.log('📊 메모리 통계:');
+    console.log('─'.repeat(60));
+    console.log('종료 메모리:');
+    console.log(`  Heap Used: ${(endMemory.heapUsed / 1024 / 1024).toFixed(2)} MB`);
+    console.log(`  External: ${(endMemory.external / 1024 / 1024).toFixed(2)} MB`);
+    console.log(`\n메모리 증가량: ${(memoryIncrease / 1024 / 1024).toFixed(2)} MB`);
+    console.log(`블록당 평균 메모리: ${(memoryIncrease / numBlocks / 1024).toFixed(2)} KB`);
