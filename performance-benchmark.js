@@ -283,3 +283,150 @@ class PerformanceBenchmark {
     console.log(`  External: ${(endMemory.external / 1024 / 1024).toFixed(2)} MB`);
     console.log(`\n메모리 증가량: ${(memoryIncrease / 1024 / 1024).toFixed(2)} MB`);
     console.log(`블록당 평균 메모리: ${(memoryIncrease / numBlocks / 1024).toFixed(2)} KB`);
+
+    // 블록체인 객체 크기 추정
+    const blockchainSize = JSON.stringify(blockchain).length;
+    console.log(`블록체인 JSON 크기: ${(blockchainSize / 1024 / 1024).toFixed(2)} MB`);
+
+    this.results.tests.push({
+      name: 'Memory Usage',
+      numBlocks,
+      memoryIncrease: (memoryIncrease / 1024 / 1024).toFixed(2) + ' MB',
+      avgMemoryPerBlock: (memoryIncrease / numBlocks / 1024).toFixed(2) + ' KB',
+      blockchainSize: (blockchainSize / 1024 / 1024).toFixed(2) + ' MB'
+    });
+  }
+
+  /**
+   * 테스트 5: 난이도별 성능 비교
+   */
+  testDifficultyScaling() {
+    console.log('\n\n╔════════════════════════════════════════════════════════╗');
+    console.log('║   테스트 5: 난이도별 성능 비교                         ║');
+    console.log('╚════════════════════════════════════════════════════════╝\n');
+
+    const difficulties = [3, 4, 5];
+    const results = [];
+
+    difficulties.forEach(difficulty => {
+      console.log(`\n난이도 ${difficulty} 테스트 중... (0이 ${difficulty}개)`);
+      
+      const blockchain = new Blockchain();
+      
+      // POW 함수 임시 수정
+      const originalPOW = blockchain.proofOfWork;
+      blockchain.proofOfWork = function(parentHash, currentBlockData) {
+        const target = '0'.repeat(difficulty);
+        let nonce = 0;
+        let hash = this.hashBlock(parentHash, currentBlockData, nonce);
+        
+        while (!hash.startsWith(target)) {
+          nonce++;
+          hash = this.hashBlock(parentHash, currentBlockData, nonce);
+        }
+        
+        return nonce;
+      };
+
+      const tx = blockchain.createNewTransaction(100, 'Alice', 'Bob');
+      blockchain.addTransactionToPendingTransactions(tx);
+
+      const lastBlock = blockchain.getLastBlock();
+      const parentHash = lastBlock.hash;
+      const blockData = {
+        transactions: blockchain.pendingTxs,
+        index: lastBlock.index + 1
+      };
+
+      const startTime = Date.now();
+      const nonce = blockchain.proofOfWork(parentHash, blockData);
+      const endTime = Date.now();
+      const timeMs = endTime - startTime;
+
+      results.push({
+        difficulty,
+        nonce,
+        attempts: nonce + 1,
+        timeMs,
+        hashrate: ((nonce + 1) / (timeMs / 1000)).toFixed(0)
+      });
+
+      console.log(`  Nonce: ${nonce.toLocaleString()}`);
+      console.log(`  시도: ${(nonce + 1).toLocaleString()}`);
+      console.log(`  시간: ${timeMs}ms`);
+      console.log(`  해시레이트: ${results[results.length - 1].hashrate} H/s`);
+    });
+
+    console.log('\n📊 난이도 비교:');
+    console.log('─'.repeat(60));
+    console.log('난이도   시도 횟수        시간         해시레이트');
+    results.forEach(r => {
+      console.log(`  ${r.difficulty}      ${r.attempts.toString().padEnd(15)}  ${r.timeMs.toString().padEnd(10)}ms  ${r.hashrate} H/s`);
+    });
+
+    this.results.tests.push({
+      name: 'Difficulty Scaling',
+      results: results
+    });
+  }
+
+  /**
+   * 최종 결과 요약
+   */
+  displaySummary() {
+    console.log('\n\n╔════════════════════════════════════════════════════════╗');
+    console.log('║              벤치마크 결과 요약                        ║');
+    console.log('╚════════════════════════════════════════════════════════╝\n');
+
+    this.results.tests.forEach((test, idx) => {
+      console.log(`${idx + 1}. ${test.name}`);
+      console.log('─'.repeat(60));
+      
+      Object.keys(test).forEach(key => {
+        if (key !== 'name' && key !== 'results') {
+          console.log(`   ${key}: ${test[key]}`);
+        }
+      });
+      console.log('');
+    });
+
+    console.log('💡 성능 개선 팁:');
+    console.log('─'.repeat(60));
+    console.log('• Worker Threads를 사용하여 병렬 채굴 가능');
+    console.log('• C++ 애드온으로 해시 함수 최적화 가능');
+    console.log('• 메모리 풀링으로 가비지 컬렉션 감소');
+    console.log('• ASIC 하드웨어로 수백만 배 빠른 채굴 가능');
+  }
+
+  /**
+   * 모든 테스트 실행
+   */
+  runAllTests() {
+    console.log('\n');
+    console.log('╔══════════════════════════════════════════════════════════╗');
+    console.log('║                                                          ║');
+    console.log('║         블록체인 성능 벤치마크 도구                      ║');
+    console.log('║                                                          ║');
+    console.log('╚══════════════════════════════════════════════════════════╝');
+
+    this.displaySystemInfo();
+    
+    this.testBlockCreation(10);
+    this.testTransactionThroughput(1000);
+    this.testChainValidation(30);
+    this.testMemoryUsage(50);
+    this.testDifficultyScaling();
+    
+    this.displaySummary();
+
+    console.log('\n✅ 모든 벤치마크 테스트 완료!\n');
+  }
+}
+
+// 실행
+if (require.main === module) {
+  const benchmark = new PerformanceBenchmark();
+  benchmark.runAllTests();
+}
+
+module.exports = PerformanceBenchmark;
