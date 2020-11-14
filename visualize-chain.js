@@ -251,3 +251,134 @@ class ChainVisualizer {
       ? value.substring(0, maxValueLength - 3) + '...'
       : value;
     
+    const padding = width - label.length - truncatedValue.length - 2;
+    console.log(`│ ${label}: ${truncatedValue}${' '.repeat(padding)}│`);
+  }
+
+  /**
+   * 대화형 뷰어
+   */
+  interactiveView() {
+    console.log('\n');
+    console.log('╔══════════════════════════════════════════════════════════════════════╗');
+    console.log('║                   BLOCKCHAIN INTERACTIVE VIEWER                      ║');
+    console.log('╚══════════════════════════════════════════════════════════════════════╝');
+    
+    this.visualizeFlow();
+    this.visualizeConnections();
+    this.visualizeTransactionFlow();
+    this.displayChainStats();
+  }
+
+  /**
+   * 애니메이션 효과로 블록 추가 시연
+   */
+  async animateBlockAddition() {
+    console.log('\n');
+    console.log('🎬 블록 추가 애니메이션\n');
+
+    // 트랜잭션 추가
+    console.log('1️⃣  트랜잭션 생성...');
+    const tx = this.blockchain.createNewTransaction(100, 'Alice', 'Bob');
+    this.blockchain.addTransactionToPendingTransactions(tx);
+    console.log(`   ✅ 트랜잭션 생성 완료: ${tx.amount} BTC`);
+    
+    await this.sleep(500);
+
+    // POW 시작
+    console.log('\n2️⃣  Proof of Work 시작...');
+    const lastBlock = this.blockchain.getLastBlock();
+    const parentHash = lastBlock.hash;
+    const blockData = {
+      transactions: this.blockchain.pendingTxs,
+      index: lastBlock.index + 1
+    };
+
+    let nonce = 0;
+    let hash = '';
+    let attempts = 0;
+    
+    const startTime = Date.now();
+    
+    // POW 진행 상황 표시
+    const interval = setInterval(() => {
+      attempts++;
+      process.stdout.write(`\r   시도 중... ${attempts.toLocaleString()} 해시 계산됨`);
+    }, 50);
+
+    nonce = this.blockchain.proofOfWork(parentHash, blockData);
+    hash = this.blockchain.hashBlock(parentHash, blockData, nonce);
+    
+    clearInterval(interval);
+    
+    const endTime = Date.now();
+    console.log(`\r   ✅ Nonce 발견: ${nonce.toLocaleString()} (${(endTime - startTime)}ms)`);
+    console.log(`   Hash: ${hash}`);
+
+    await this.sleep(500);
+
+    // 블록 생성
+    console.log('\n3️⃣  블록 생성...');
+    const newBlock = this.blockchain.createNewBlock(parentHash, hash, nonce);
+    console.log(`   ✅ 블록 #${newBlock.index} 생성 완료`);
+
+    await this.sleep(500);
+
+    // 체인 표시
+    console.log('\n4️⃣  업데이트된 체인:\n');
+    this.visualizeFlow();
+  }
+
+  /**
+   * Sleep 유틸리티
+   */
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+}
+
+// 실행
+if (require.main === module) {
+  const blockchain = new Blockchain();
+  
+  // 샘플 블록 생성
+  console.log('샘플 블록체인 생성 중...\n');
+  
+  for (let i = 0; i < 5; i++) {
+    const tx = blockchain.createNewTransaction(
+      Math.floor(Math.random() * 100) + 10,
+      `Sender${i}`,
+      `Recipient${i}`
+    );
+    blockchain.addTransactionToPendingTransactions(tx);
+
+    const lastBlock = blockchain.getLastBlock();
+    const parentHash = lastBlock.hash;
+    const blockData = {
+      transactions: blockchain.pendingTxs,
+      index: lastBlock.index + 1
+    };
+
+    const nonce = blockchain.proofOfWork(parentHash, blockData);
+    const hash = blockchain.hashBlock(parentHash, blockData, nonce);
+    blockchain.createNewBlock(parentHash, hash, nonce);
+    
+    console.log(`블록 ${i + 1} 생성 완료...`);
+  }
+
+  const visualizer = new ChainVisualizer(blockchain);
+  
+  // 다양한 시각화 옵션
+  console.log('\n\n');
+  visualizer.interactiveView();
+  
+  console.log('\n');
+  console.log('상세 블록 뷰:');
+  visualizer.visualizeChain(3); // 처음 3개 블록만
+
+  // 애니메이션 데모
+  console.log('\n\n');
+  visualizer.animateBlockAddition();
+}
+
+module.exports = ChainVisualizer;
